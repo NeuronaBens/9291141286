@@ -33,6 +33,11 @@
         .flex-card-child-1 {
           flex: 1 0 95%;
         }
+        .flexed-div {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: space-between;
+        }
       }
     </style>
   </head>
@@ -46,7 +51,7 @@
       }
     </script>
   <button id="draw-button">Draw Card</button>
-  <div id="drawing-site"></div>
+  <div id="drawing-site" class="flexed-div"></div>
 
   <script type="module">
     // Import the functions you need from the SDKs you need
