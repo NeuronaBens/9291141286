@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yu-Gi-Oh!</title>
+    <style media="screen">
+    .set-to-right {
+      float: right;
+    }
+    </style>
+  </head>
+  <body>
+
+    <script type="text/javascript">
+      function incrementIdByOne(current, expected_length){
+        current = Number(current);
+        current += 1;
+        current = String(current);
+        reps = expected_length - current.length;
+        for(let i = 0; i < reps; i++) {
+          current = "0" + current;
+        }
+        return current;
+      }
+    </script>
+
+    <a href="index.html" class="set-to-right">
+        <button>Return</button>
+    </a> <br>
+    <span>Name</span>
+    <input type="text" id="NameInput" value=""> <br><br>
+    <span>Type</span>
+    <input type="text" id="TypeInput" value=""> <br><br>
+    <span>Img-Source</span>
+    <input type="text" id="ImgSourceInput" value=""> <br><br>
+    <span>Description</span> <br>
+    <textarea name="Description" rows="10" cols="50" id="DescriptionInput"></textarea> <br><br>
+    <span>ATK/DEF</span>
+    <input type="text" id="StatsInput" value=""> <br><br>
+    <span>Family</span>
+    <input type="text" id="FamilyInput" value="general"> <br><br>
+    <button id="create-btn">Create</button>
+
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.6/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.6/firebase-analytics.js";
+
+      // https://firebase.google.com/docs/web/setup#available-libraries
+
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      const firebaseConfig = {
+        apiKey: "AIzaSyD24gjB7nxjMd6J13H8gaYrS7fSugbAzZs",
+        authDomain: "yu-gi-oh-simulator.firebaseapp.com",
+        databaseURL: "https://yu-gi-oh-simulator-default-rtdb.firebaseio.com",
+        projectId: "yu-gi-oh-simulator",
+        storageBucket: "yu-gi-oh-simulator.appspot.com",
+        messagingSenderId: "809067246830",
+        appId: "1:809067246830:web:234833cc04c1d3a6ecefff",
+        measurementId: "G-Q65QYNGMY1"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+
+      import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.6.6/firebase-database.js";
+      import { get, child } from "https://www.gstatic.com/firebasejs/9.6.5/firebase-database.js";
+
+      function writeCardData(cardId, name, details, img_source, description, stats, family) {
+        const db = getDatabase();
+        set(ref(db, 'Cards/' + cardId), {
+          DESC: description,
+          DETAILS: details,
+          FAMILY: family,
+          IMG_SOURCE: img_source,
+          NAME: name,
+          STATS: stats
+        });
+      }
+
+      function writeNewLastId(new_last_id) {
+        const db = getDatabase();
+        set(ref(db, 'LastID/'), {
+          ID: new_last_id
+        });
+      }
+
+      function CreateCard(){
+        let lastIDObj = 0;
+        let lastId = 0;
+        const dbRef = ref(getDatabase());
+
+        get(child(dbRef, `LastID/`)).then((snapshot) => {
+          if (snapshot.exists()) {
+            lastIDObj = snapshot.val();
+            for (let key in lastIDObj) { lastId = lastIDObj[key]; }
+
+            let newId = incrementIdByOne(lastId, 6); //6 es por la convención que yo mismo determiné
+
+            let name = document.getElementById("NameInput").value;
+            let details = document.getElementById("TypeInput").value;
+            let img_source = document.getElementById("ImgSourceInput").value;
+            let description = document.getElementById("DescriptionInput").value;
+            let stats = document.getElementById("StatsInput").value;
+            let family = document.getElementById("FamilyInput").value;
+            writeCardData(newId, name, details, img_source, description, stats, family); //crear la nueva carta con ese id nuevo
+
+            writeNewLastId(newId);  //actualizar el lastId
+            console.log("succesful");
+          }
+          else {console.log("No data available");}
+        }).catch((error) => {console.error(error);});
+      }
+
+      document.getElementById(`create-btn`).addEventListener("click", CreateCard);
+
+    </script>
+
+  </body>
+</html>

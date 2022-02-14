@@ -16,10 +16,21 @@
       .card-title {
         display: inline;
       }
+      .set-to-right {
+        float: right;
+      }
+      p {
+        white-space: pre-wrap;
+      }
       @media (min-width: 600px) {
         img {
           width: 250px;
           height: auto;
+          margin: auto; /*para centrar el elemento en su contenedor (centrar-1)*/
+        }
+        .img-container {
+          width: 95%;
+          text-align: center; /*para centrar el elemento interno del div (centrar-1)*/
         }
         .card {
           width: 45%;
@@ -44,14 +55,28 @@
   <body>
     <script type="text/javascript">
       //se declara la función para cerrar divs
-      //tuve que cambiar esto de sitio para que funcionen los botones de cerrado, parece que importa el scope y la posición del script.
+      //tuve que cambiar esto de sitio para que funcionen los botones de cerrado,
+      //parece que importa el scope y la posición del script.
       var closeBtn = function(id){
         document.getElementById(id).remove();
         console.log(id);
       }
     </script>
+
+
+
   <button id="draw-button">Draw Card</button>
+  <button id="draw-all-button">Show All Cards</button>
+  <a href="create-card.html" class="set-to-right">
+      <button>Add Card</button>
+  </a><br><br>
+  <select name="families" id="families">
+  </select>
+  <button id="reset-family-button">⬇</button>
+  <br><br>
   <div id="drawing-site" class="flexed-div"></div>
+
+
 
   <script type="module">
     // Import the functions you need from the SDKs you need
@@ -81,6 +106,7 @@
     let cardsObj = 0;
     let cards = []
     let counter = 0;
+    let families = [];
 
     // Get a database reference to our posts
     const dbRef = ref(getDatabase());
@@ -88,17 +114,11 @@
     // consigue toda la información de la base de datos (ineficiente)
     get(child(dbRef, `Cards/`)).then((snapshot) => {
       if (snapshot.exists()) {
-
         cardsObj = snapshot.val();
         //parsing the database entries
-        for (let key in cardsObj) {
-          cards.push(cardsObj[key]);
-        }
-        console.log(cards);
-
-      } else {
-        console.log("No data available");
+        for (let key in cardsObj) { cards.push(cardsObj[key]); }
       }
+      else { console.log("No data available"); }
     }).catch((error) => {
       console.error(error);
     });
@@ -109,27 +129,76 @@
     }
 
     //dibuja lo necesario dentro del div que declaramos
-    var drawCard = function(){
+    var drawCardRandom = function(){
       counter += 1;
-      let n = getRandomInt(0, cards.length);
+      let family = document.getElementById("families").value;
+      let familyCards = []
+      for(let i = 0; i < cards.length; i++){
+        if(cards[i]["FAMILY"].split("/").indexOf(family) >= 0){
+          familyCards.push(cards[i])
+        }
+      }
+      let n = getRandomInt(0, familyCards.length);
       document.getElementById("drawing-site").innerHTML = document.getElementById("drawing-site").innerHTML +
       `<div class = 'card' id = 'c${counter}'>`+
-      `<h2 class = "card-title flex-card-child-2"><strong>${cards[n]["NAME"]}</strong></h2>`+ //ALT + 96
+      `<h2 class = "card-title flex-card-child-2"><strong>${familyCards[n]["NAME"]}</strong></h2>`+ //ALT + 96
       `<button class = "close-btn flex-card-child-2" onclick="closeBtn('c${counter}')">X</button>` +
-      `<p class = "flex-card-child-1">${cards[n]["DETAILS"]}</p>`+
-      `<img src="${cards[n]["IMG_SOURCE"]}" alt="card avatar">` +
-      `<p>${cards[n]["DESC"]}</p>` +
-      `<h3>${cards[n]["STATS"]}</h3>` +
+      `<p class = "flex-card-child-1">${familyCards[n]["DETAILS"]}</p>`+
+      `<div class = "img-container"><img src="${familyCards[n]["IMG_SOURCE"]}" alt="card avatar"></div>` +
+      `<p>${familyCards[n]["DESC"]}</p>` +
+      `<h3>${familyCards[n]["STATS"]}</h3>` +
       "</div>";
-
       //document.getElementById(`${counter}-btn`).addEventListener("click", function(){close(`c${counter}`);});
       //esto no me funcionaba, y aqui esta la respuesta de porque: https://stackoverflow.com/questions/5113105/manipulating-innerhtml-removes-the-event-handler-of-a-child-element
     }
 
+    var drawAllCards = function(){
+      let family = document.getElementById("families").value;
+      let familyCards = []
+      for(let i = 0; i < cards.length; i++){
+        if(cards[i]["FAMILY"].split("/").indexOf(family) >= 0){
+          familyCards.push(cards[i])
+        }
+      }
+      for(let n = 0; n < familyCards.length; n++){
+        document.getElementById("drawing-site").innerHTML = document.getElementById("drawing-site").innerHTML +
+        `<div class = 'card' id = 'c${counter}'>`+
+        `<h2 class = "card-title flex-card-child-2"><strong>${familyCards[n]["NAME"]}</strong></h2>`+ //ALT + 96
+        `<button class = "close-btn flex-card-child-2" onclick="closeBtn('c${counter}')">X</button>` +
+        `<p class = "flex-card-child-1">${familyCards[n]["DETAILS"]}</p>`+
+        `<div class = "img-container"><img src="${familyCards[n]["IMG_SOURCE"]}" alt="card avatar"></div>` +
+        `<p>${familyCards[n]["DESC"]}</p>` +
+        `<h3>${familyCards[n]["STATS"]}</h3>` +
+        "</div>";
+      }
+    }
+
+    var resetFamilyList = function(){
+      //parsing for all families
+      let fullType = "";
+      let individualTypes = [];
+      for(let n = 0; n < cards.length; n++){
+        fullType = cards[n]["FAMILY"];
+        individualTypes = fullType.split("/");
+        for(let i = 0; i < individualTypes.length; i++){
+          if(families.indexOf(individualTypes[i]) < 0) { //devuelve -1 si no existe el current family y 0 o mas si sí está.
+            families.push(individualTypes[i]);
+          }
+        }
+      }
+      console.log(families);
+      let zone = document.getElementById("families");
+      zone.innerHTML = ""
+      for(let i = 0; i < families.length; i++){ //agregando las familias a la lista de opciones
+        zone.innerHTML += `<option value="${families[i]}">${families[i]}</option>`;
+      }
+    }
+
     //agrego funcionalidad a los botones, mas fiable que declararlo "inline".
-    document.getElementById("draw-button").addEventListener("click", drawCard);
+    document.getElementById("draw-button").addEventListener("click", drawCardRandom);
+    document.getElementById("draw-all-button").addEventListener("click", drawAllCards);
+    document.getElementById("reset-family-button").addEventListener("click", resetFamilyList);
 
   </script>
-
   </body>
 </html>
