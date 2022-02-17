@@ -6,43 +6,93 @@
     <title>Yu-Gi-Oh!</title>
     <style type="text/css">
       img {
-        width: 90%;
+        width: 100%;
         height: auto;
       }
       .close-btn {
         background-color: red;
         float: right;
-      }
-      .card-title {
-        display: inline;
+        width: 40px;
+        height: 40px;
       }
       .set-to-right {
         float: right;
       }
-      p {
-        white-space: pre-wrap;
+      .inline {
+        display: inline;
       }
+      .invisible {
+        display: none;
+      }
+      .card {
+        margin-bottom: 10px;
+        border-color: black;
+        border-style: solid;
+        border-width: 1px;
+        padding-left: 3px;
+        padding-right: 3px;
+      }
+
+      .black {
+        background-color: black !important;
+      }
+      .white {
+        background-color: white !important;
+      }
+
+      .on-hand {background-color: blue;}
+      .on-field {background-color: green;}
+      .on-graveyard {background-color: red;}
+      .on-banish {background-color: black;}
+
+      .face-up {
+        background-color: grey;
+      }
+      .face-down {
+        background-color: white;
+      }
+
+      .circle {
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+      }
+      .square {
+        width: 25px;
+        height: 25px;
+      }
+      .level-star {
+        border-radius: 50%;
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        background-color: orange;
+        margin: 3px;
+      }
+      .families-selector {
+        font-family: Arial;
+      }
+
       @media (min-width: 600px) {
         img {
           width: 250px;
           height: auto;
-          margin: auto; /*para centrar el elemento en su contenedor (centrar-1)*/
+          margin-left: 20%; /*para centrar el elemento en su contenedor (centrar-1)*/
         }
         .img-container {
-          width: 95%;
-          text-align: center; /*para centrar el elemento interno del div (centrar-1)*/
+          width: 80%;
+          display: inline;
+        }
+        .circle {
+          width: 10%;
+          height: 10%;
+          display: inline-block;
+          margin: 3px;
         }
         .card {
           width: 45%;
-          display: flex;
           flex-wrap: wrap;
           justify-content: space-around;
-        }
-        .flex-card-child-2 {
-          flex: 1 0 45%;
-        }
-        .flex-card-child-1 {
-          flex: 1 0 95%;
         }
         .flexed-div {
           display: flex;
@@ -61,6 +111,82 @@
         document.getElementById(id).remove();
         console.log(id);
       }
+      //para generar numero aleatorio
+      function getRandomInt(min, max) { //max excluido
+        return Math.floor(Math.random() * (max - min)) + min;
+      }
+      var HTMLForLevelStars = function(howMany, genNum){
+        if(howMany <= 0 || isNaN(howMany)) {
+          return "";
+        }
+        let string = `<div class='inline set-to-right'>`;
+        for(let i = 0; i < howMany; i++)
+          string += `<div class='level-star star${genNum}'></div>`;
+        string += "</div>";
+        return string;
+      }
+      var HTMLForStats = function(stats){
+        if(isNaN(Number(stats.split("/")[0])))
+          return "";
+        return `<h3>${stats}</h3>`;
+      }
+      var drawCard = function(familyCards, counter, n){
+        details=familyCards[n]["DETAILS"].split("/");
+        document.getElementById("drawing-site").innerHTML =
+        `<div class = 'card' id = 'c${counter}'>`+
+        `<h2 class = "inline"><strong>${familyCards[n]["NAME"]}</strong></h2>`+ //ALT + 96
+        `<button class = "close-btn" onclick="closeBtn('c${counter}')">X</button>` +
+        `<br><span>${familyCards[n]["DETAILS"]}</span>`+
+        HTMLForLevelStars(Number(details[details.length - 1].split("s")[0]), counter) +
+        `<br><br><div class = "img-container"><img src="${familyCards[n]["IMG_SOURCE"]}" alt="card avatar" id="img${counter}"></div>` +
+        `<div class="circle on-hand set-to-right" id='circle${counter}' onclick="AlterCircle('circle${counter}')"></div>` +
+        `<div class="square face-up set-to-right" id='square${counter}' onclick="ChangeFace('square${counter}', '${counter}')"></div>` +
+        `<p>${familyCards[n]["DESC"]}</p>` +
+        HTMLForStats(familyCards[n]["STATS"]) +
+        "</div>" +
+        document.getElementById("drawing-site").innerHTML;
+      }
+      var AlterCircle = function(id){
+        circle = document.getElementById(id);
+        if(circle.className == "circle on-hand set-to-right"){circle.className = "circle on-field set-to-right";}
+        else if(circle.className == "circle on-field set-to-right"){circle.className = "circle on-graveyard set-to-right";}
+        else if(circle.className == "circle on-graveyard set-to-right"){circle.className = "circle on-banish set-to-right";}
+        else if(circle.className == "circle on-banish set-to-right"){circle.className = "circle on-hand set-to-right";}
+      }
+      var ChangeFace = function(id, genNum){
+        square = document.getElementById(id);
+        respectiveImg = document.getElementById("img"+genNum);
+        cardDiv = document.getElementById("c"+genNum);
+        stars = document.getElementsByClassName("level-star star"+genNum);
+        if(square.className == "square face-up set-to-right"){
+          square.className = "square face-down set-to-right";
+          respectiveImg.className = "invisible";
+          cardDiv.className = "card black";
+          for(let i = 0; i < stars.length; i++)
+            stars[i].className = `level-star star${genNum} black`;
+        }
+        else if(square.className == "square face-down set-to-right"){
+          square.className = "square face-up set-to-right";
+          respectiveImg.className = "";
+          cardDiv.className = "card";
+          for(let i = 0; i < stars.length; i++)
+            stars[i].className = `level-star star${genNum}`;
+        }
+      }
+      var GetFamilyCardsForMultipleFamilies = function(listOfFamilies, allCards){
+        cardsToReturn = []
+        for(let i = 0; i < listOfFamilies.length; i++)
+          for(let j = 0; j < allCards.length; j++)
+            if(allCards[j]["FAMILY"].split("/").indexOf(listOfFamilies[i]) >= 0)
+              cardsToReturn.push(allCards[j])
+        for(let i = 0; i < cardsToReturn.length; i++)
+          for(let j = i+1; j < cardsToReturn.length; j++)
+            if(cardsToReturn[i]["NAME"] == cardsToReturn[j]["NAME"]){
+              cardsToReturn.splice(j, 1);
+              j--;
+            }
+        return cardsToReturn;
+      }
     </script>
 
 
@@ -70,9 +196,13 @@
   <a href="create-card.html" class="set-to-right">
       <button>Add Card</button>
   </a><br><br>
-  <select name="families" id="families">
-  </select>
+  <div id="selector-zone">
+    <select name="families" id="families" class="families-selector">
+    </select>
+  </div>
+  <button id="add-select-button">+</button>
   <button id="reset-family-button">⬇</button>
+  <button id="reset-selector-zone-button">reset</button>
   <br><br>
   <div id="drawing-site" class="flexed-div"></div>
 
@@ -106,6 +236,7 @@
     let cardsObj = 0;
     let cards = []
     let counter = 0;
+    let selectorCounter = 0;
     let families = [];
 
     // Get a database reference to our posts
@@ -123,53 +254,50 @@
       console.error(error);
     });
 
-    //para generar numero aleatorio
-    function getRandomInt(min, max) { //max excluido
-      return Math.floor(Math.random() * (max - min)) + min;
-    }
 
+    //////////////////////////////////////////////////////////////////////////////////////////
     //dibuja lo necesario dentro del div que declaramos
     var drawCardRandom = function(){
-      counter += 1;
-      let family = document.getElementById("families").value;
+      let selects = document.getElementsByClassName("families-selector");
+      let listOfFamilies = []
       let familyCards = []
-      for(let i = 0; i < cards.length; i++){
-        if(cards[i]["FAMILY"].split("/").indexOf(family) >= 0){
-          familyCards.push(cards[i])
+      for(let i = 0; i < selects.length; i++){
+        listOfFamilies.push(selects[i].value);
+        if(selects[i].value == "all"){
+          let n = getRandomInt(0, cards.length);
+          counter += 1;
+          drawCard(cards, counter, n);
+          return;
         }
       }
+      familyCards = GetFamilyCardsForMultipleFamilies(listOfFamilies, cards);
       let n = getRandomInt(0, familyCards.length);
-      document.getElementById("drawing-site").innerHTML = document.getElementById("drawing-site").innerHTML +
-      `<div class = 'card' id = 'c${counter}'>`+
-      `<h2 class = "card-title flex-card-child-2"><strong>${familyCards[n]["NAME"]}</strong></h2>`+ //ALT + 96
-      `<button class = "close-btn flex-card-child-2" onclick="closeBtn('c${counter}')">X</button>` +
-      `<p class = "flex-card-child-1">${familyCards[n]["DETAILS"]}</p>`+
-      `<div class = "img-container"><img src="${familyCards[n]["IMG_SOURCE"]}" alt="card avatar"></div>` +
-      `<p>${familyCards[n]["DESC"]}</p>` +
-      `<h3>${familyCards[n]["STATS"]}</h3>` +
-      "</div>";
+      counter += 1;
+      drawCard(familyCards, counter, n);
+    }
       //document.getElementById(`${counter}-btn`).addEventListener("click", function(){close(`c${counter}`);});
       //esto no me funcionaba, y aqui esta la respuesta de porque: https://stackoverflow.com/questions/5113105/manipulating-innerhtml-removes-the-event-handler-of-a-child-element
-    }
 
     var drawAllCards = function(){
-      let family = document.getElementById("families").value;
+      let selects = document.getElementsByClassName("families-selector");
+      let listOfFamilies = []
       let familyCards = []
-      for(let i = 0; i < cards.length; i++){
-        if(cards[i]["FAMILY"].split("/").indexOf(family) >= 0){
-          familyCards.push(cards[i])
+      for(let i = 0; i < selects.length; i++){
+        listOfFamilies.push(selects[i].value);
+        if(selects[i].value == "all"){
+          for(let j = 0; j < cards.length; j++)
+              familyCards.push(cards[j]);
+          for(let n = 0; n < familyCards.length; n++){
+            counter += 1;
+            drawCard(familyCards, counter, n);
+          }
+          return;
         }
       }
-      for(let n = 0; n < familyCards.length; n++){
-        document.getElementById("drawing-site").innerHTML = document.getElementById("drawing-site").innerHTML +
-        `<div class = 'card' id = 'c${counter}'>`+
-        `<h2 class = "card-title flex-card-child-2"><strong>${familyCards[n]["NAME"]}</strong></h2>`+ //ALT + 96
-        `<button class = "close-btn flex-card-child-2" onclick="closeBtn('c${counter}')">X</button>` +
-        `<p class = "flex-card-child-1">${familyCards[n]["DETAILS"]}</p>`+
-        `<div class = "img-container"><img src="${familyCards[n]["IMG_SOURCE"]}" alt="card avatar"></div>` +
-        `<p>${familyCards[n]["DESC"]}</p>` +
-        `<h3>${familyCards[n]["STATS"]}</h3>` +
-        "</div>";
+      familyCards = GetFamilyCardsForMultipleFamilies(listOfFamilies, cards);
+      for(let n=0; n < familyCards.length; n++){
+        counter += 1;
+        drawCard(familyCards, counter, n);
       }
     }
 
@@ -180,6 +308,7 @@
       for(let n = 0; n < cards.length; n++){
         fullType = cards[n]["FAMILY"];
         individualTypes = fullType.split("/");
+        individualTypes.push("all");
         for(let i = 0; i < individualTypes.length; i++){
           if(families.indexOf(individualTypes[i]) < 0) { //devuelve -1 si no existe el current family y 0 o mas si sí está.
             families.push(individualTypes[i]);
@@ -194,10 +323,26 @@
       }
     }
 
+    var addSelect = function(){
+        let htmlString = document.getElementById("families").innerHTML;
+        htmlString = `<select id="families${selectorCounter}" class="families-selector">` + htmlString + "</select>";
+        selectorCounter += 1;
+        let selectorZone = document.getElementById("selector-zone");
+        selectorZone.innerHTML += htmlString;
+    }
+
+    var resetSelectorZone = function(){
+      let selectorZone = document.getElementById("selector-zone");
+      selectorZone.innerHTML = '<select name="families" id="families" class="families-selector"></select>';
+      resetFamilyList();
+    }
+
     //agrego funcionalidad a los botones, mas fiable que declararlo "inline".
     document.getElementById("draw-button").addEventListener("click", drawCardRandom);
     document.getElementById("draw-all-button").addEventListener("click", drawAllCards);
     document.getElementById("reset-family-button").addEventListener("click", resetFamilyList);
+    document.getElementById("add-select-button").addEventListener("click", addSelect);
+    document.getElementById("reset-selector-zone-button").addEventListener("click", resetSelectorZone);
 
   </script>
   </body>
