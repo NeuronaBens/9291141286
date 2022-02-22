@@ -130,6 +130,32 @@
           return "";
         return `<h3>${stats}</h3>`;
       }
+      var HTMLForSceneSelect = function(genNum){
+        string = `<select name="scene${genNum}" id="scene-select-${genNum}" class="scene-selector" onchange="preventSelectReset()">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>`
+        return string;
+      }
+      var preventSelectReset = function(){
+        let cardDivs = document.getElementsByClassName("card");
+        for(let i = 0; i < cardDivs.length; i++){
+          let specificSelect = document.getElementById("scene-select-" + String(cardDivs[i].id).substring(1, 10));
+          let genNum = Number(String(cardDivs[i].id).substring(1, 10))
+          let x = `<select name="scene${genNum}" id="scene-select-${genNum}" class="scene-selector" onchange="preventSelectReset()">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>`
+          x = x.substring(0, x.indexOf(`>${specificSelect.value}`)) + " selected" + x.substring(x.indexOf(`>${specificSelect.value}`), x.length);
+          specificSelect.innerHTML = x;
+        }
+      }
       var drawCard = function(familyCards, counter, n){
         details=familyCards[n]["DETAILS"].split("/");
         document.getElementById("drawing-site").innerHTML =
@@ -141,10 +167,17 @@
         `<br><br><div class = "img-container"><img src="${familyCards[n]["IMG_SOURCE"]}" alt="card avatar" id="img${counter}"></div>` +
         `<div class="circle on-hand set-to-right" id='circle${counter}' onclick="AlterCircle('circle${counter}')"></div>` +
         `<div class="square face-up set-to-right" id='square${counter}' onclick="ChangeFace('square${counter}', '${counter}')"></div>` +
+        `<div class="inline">${HTMLForSceneSelect(counter)}</div>` +
         `<p>${familyCards[n]["DESC"]}</p>` +
         HTMLForStats(familyCards[n]["STATS"]) +
         "</div>" +
         document.getElementById("drawing-site").innerHTML;
+        if(document.getElementById("scene").value != "0")
+          document.getElementById(`scene-select-${counter}`).value = document.getElementById("scene").value;
+          let select = document.getElementById(`scene-select-${counter}`);
+          let x = String(select.innerHTML);
+          x = x.substring(0, x.indexOf(`>${select.value}`)) + " selected" + x.substring(x.indexOf(`>${select.value}`), x.length);
+          select.innerHTML = x;
       }
       var AlterCircle = function(id){
         circle = document.getElementById(id);
@@ -173,6 +206,7 @@
             stars[i].className = `level-star star${genNum}`;
         }
       }
+
       var GetFamilyCardsForMultipleFamilies = function(listOfFamilies, allCards){
         cardsToReturn = []
         for(let i = 0; i < listOfFamilies.length; i++)
@@ -203,6 +237,21 @@
   <button id="add-select-button">+</button>
   <button id="reset-family-button">⬇</button>
   <button id="reset-selector-zone-button">reset</button>
+  <input type="text" id="search-bar" class="set-to-right">
+  <button class="set-to-right" id="search-button">search</button>
+  <div id="scene-zone">
+    <br>
+    <select name="scene" id="scene" class="scene-selector">
+      <option value="0">0</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
+    <button id="scene-button">Go</button>
+    <button id="clear-current-scene-button">clear</button>
+  </div>
   <br><br>
   <div id="drawing-site" class="flexed-div"></div>
 
@@ -337,12 +386,66 @@
       resetFamilyList();
     }
 
+    var changeScene = function(){
+      let w = document.getElementById("scene").value;
+      let cardDivs = document.getElementsByClassName("card");
+      console.log(w);
+      if(w == "0"){
+        for(let i = 0; i < cardDivs.length; i++){
+          if(String(cardDivs[i].className).indexOf("black") >= 0){
+            cardDivs[i].className = "card black"; continue;
+          }
+          cardDivs[i].className = "card";
+        }
+      }
+      else{
+        for(let i = 0; i < cardDivs.length; i++){
+          if(document.getElementById("scene-select-" + String(cardDivs[i].id).substring(1, 10)).value != w){
+            if(String(cardDivs[i].className).indexOf("black") >= 0){
+              cardDivs[i].className = "card black invisible"; continue;
+            }
+            cardDivs[i].className = "card invisible";
+          }
+          else{
+            if(String(cardDivs[i].className).indexOf("black") >= 0){
+              cardDivs[i].className = "card black"; continue;
+            }
+            cardDivs[i].className = "card";
+          }
+        }
+      }
+    }
+
+    var clearCurrentScene = function(){
+      let cardDivs = document.getElementsByClassName("card");
+      for(let i = 0; i < cardDivs.length; i++){
+        console.log(cardDivs[i].id)
+        if(cardDivs[i].className == "card"){
+          document.getElementById(cardDivs[i].id).remove();
+          i--;
+        }
+      }
+    }
+
+    var searchCardsThatMatch = function(){
+      let string = document.getElementById("search-bar").value;
+      for(let i = 0; i < cards.length; i++){
+        if(cards[i]["NAME"].toLowerCase().indexOf(string.toLowerCase()) >= 0){
+          counter += 1;
+          drawCard(cards, counter, i);
+        }
+      }
+    }
+
     //agrego funcionalidad a los botones, mas fiable que declararlo "inline".
     document.getElementById("draw-button").addEventListener("click", drawCardRandom);
     document.getElementById("draw-all-button").addEventListener("click", drawAllCards);
     document.getElementById("reset-family-button").addEventListener("click", resetFamilyList);
     document.getElementById("add-select-button").addEventListener("click", addSelect);
     document.getElementById("reset-selector-zone-button").addEventListener("click", resetSelectorZone);
+    document.getElementById("scene-button").addEventListener("click", changeScene);
+    document.getElementById("clear-current-scene-button").addEventListener("click", clearCurrentScene);
+    document.getElementById("search-button").addEventListener("click", searchCardsThatMatch);
 
   </script>
   </body>
