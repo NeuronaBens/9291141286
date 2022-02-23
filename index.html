@@ -221,6 +221,27 @@
             }
         return cardsToReturn;
       }
+
+      var GetFamilyCardsForMultipleFamilies_Strict = function(listOfFamilies, allCards){
+        const cardsToReturn = [];
+        for(let i = 0; i < allCards.length; i++){
+          const currentFamilies = allCards[i]["FAMILY"].split("/");
+          const aux = Array(currentFamilies.length).fill(0);
+          let dodo = true;
+          for(let j = 0; j < listOfFamilies.length; j++){
+            for(let k = 0; k < currentFamilies.length; k++){
+              if(listOfFamilies[j] != currentFamilies[k])
+                aux[k] += 1;
+            }
+          }
+          for(let n = 0; n < currentFamilies.length; n++)
+            if(aux[n] >= listOfFamilies.length)
+              dodo = false;
+          if(dodo)
+            cardsToReturn.push(allCards[i]);
+        }
+        return cardsToReturn;
+      }
     </script>
 
 
@@ -233,6 +254,7 @@
   <div id="selector-zone">
     <select name="families" id="families" class="families-selector">
     </select>
+    strict <input type="checkbox" name="strict" value="strict" id="strict-checkbox">
   </div>
   <button id="add-select-button">+</button>
   <button id="reset-family-button">⬇</button>
@@ -319,6 +341,14 @@
           return;
         }
       }
+      let strict = document.getElementById("strict-checkbox").checked;
+      if(strict){
+        familyCards = GetFamilyCardsForMultipleFamilies_Strict(listOfFamilies, cards);
+        let n = getRandomInt(0, familyCards.length);
+        counter += 1;
+        drawCard(familyCards, counter, n);
+        return;
+      }
       familyCards = GetFamilyCardsForMultipleFamilies(listOfFamilies, cards);
       let n = getRandomInt(0, familyCards.length);
       counter += 1;
@@ -342,6 +372,15 @@
           }
           return;
         }
+      }
+      let strict = document.getElementById("strict-checkbox").checked;
+      if(strict){
+        familyCards = GetFamilyCardsForMultipleFamilies_Strict(listOfFamilies, cards);
+        for(let n=0; n < familyCards.length; n++){
+          counter += 1;
+          drawCard(familyCards, counter, n);
+        }
+        return;
       }
       familyCards = GetFamilyCardsForMultipleFamilies(listOfFamilies, cards);
       for(let n=0; n < familyCards.length; n++){
@@ -372,17 +411,17 @@
       }
     }
 
-    var addSelect = function(){
+    var addSelect = function(){ ////////////////////////////////////////////
         let htmlString = document.getElementById("families").innerHTML;
         htmlString = `<select id="families${selectorCounter}" class="families-selector">` + htmlString + "</select>";
         selectorCounter += 1;
         let selectorZone = document.getElementById("selector-zone");
-        selectorZone.innerHTML += htmlString;
+        selectorZone.innerHTML = htmlString + selectorZone.innerHTML;
     }
 
-    var resetSelectorZone = function(){
+    var resetSelectorZone = function(){ ////////////////////////////////////////////
       let selectorZone = document.getElementById("selector-zone");
-      selectorZone.innerHTML = '<select name="families" id="families" class="families-selector"></select>';
+      selectorZone.innerHTML = '<select name="families" id="families" class="families-selector"></select> strict <input type="checkbox" name="strict" value="strict" id="strict-checkbox">';
       resetFamilyList();
     }
 
